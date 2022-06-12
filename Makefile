@@ -37,11 +37,12 @@ export DOCKER_BUILDKIT=1
 
 DEBUG_SCRIPTS ?=
 
+USE_CACHE ?= 1
+
 DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 	-v /etc/group:/etc/group:ro \
 	-v /etc/passwd:/etc/passwd:ro \
 	-v /etc/shadow:/etc/shadow:ro \
-	-v ${HOME}/.cache:${HOME}/.cache \
 	-v $(shell pwd):${SRC_DIR} \
 	-e HOME=${HOME} \
 	-e SRC_DIR=${SRC_DIR} \
@@ -55,11 +56,15 @@ DOCKER_RUN_FLAGS ?= --user $$(id -u):$$(id -g) \
 	-e TEST_COVERAGE_DIR=${TEST_COVERAGE_DIR} \
 	-e GO_LINT_CONFIG=${GO_LINT_CONFIG} \
 	-e SHELLCHECK_SOURCEPATH=${SHELLCHECK_SOURCEPATH} \
-	-e DEBUG_SCRIPTS=${DEBUG_SCRIPTS}
+	-e DEBUG_SCRIPTS=${DEBUG_SCRIPTS} \
+	$(shell if [[ "${USE_CACHE}" == "1" ]]; then echo -v ${HOME}/.cache:${HOME}/.cache; else echo "-e GOCACHE=/tmp/.cache/go-build -e GOLANGCI_LINT_CACHE=/tmp/.cache/golangci-lint"; fi)
 
 DOCKERFILE_APP_DIR ?= build
 
-build:
+go-mod:
+	cp go.mod internal/buildinfo/_go.mod
+
+build: go-mod
 	cp go.mod internal/buildinfo/_go.mod
 	docker run ${DOCKER_RUN_FLAGS} \
 		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
@@ -78,13 +83,13 @@ image-push:
 		${DOCKER_APP_PATH}/${DOCKER_APP_IMAGE}
 .PHONY: image-push
 
-test:
+test: go-mod
 	docker run ${DOCKER_RUN_FLAGS} \
 		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
 		bash -c ${BUILD_SCRIPTS_DIR}/test.sh
 .PHONY: test
 
-lint:
+lint: go-mod
 	docker run ${DOCKER_RUN_FLAGS} \
 		${DOCKER_URL_PATH}/${DOCKER_BUILDER_IMAGE} \
 		bash -c ${BUILD_SCRIPTS_DIR}/lint.sh
