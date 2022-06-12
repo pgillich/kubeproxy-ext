@@ -1,0 +1,427 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2022-06-12T09:54:44Z",
+                "labels": {
+                    "operated-alertmanager": "true"
+                },
+                "name": "alertmanager-operated",
+                "namespace": "monitoring",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "monitoring.coreos.com/v1",
+                        "kind": "Alertmanager",
+                        "name": "prometheus-stack-kube-prom-alertmanager",
+                        "uid": "03745320-8c58-4edb-911e-5ca75d594f20"
+                    }
+                ],
+                "resourceVersion": "1430",
+                "uid": "4f26a215-3347-45d7-8b4c-55b0c5c7b953"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-web",
+                        "port": 9093,
+                        "protocol": "TCP",
+                        "targetPort": "http-web"
+                    },
+                    {
+                        "name": "tcp-mesh",
+                        "port": 9094,
+                        "protocol": "TCP",
+                        "targetPort": 9094
+                    },
+                    {
+                        "name": "udp-mesh",
+                        "port": 9094,
+                        "protocol": "UDP",
+                        "targetPort": 9094
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/name": "alertmanager"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2022-06-12T09:54:45Z",
+                "labels": {
+                    "operated-prometheus": "true"
+                },
+                "name": "prometheus-operated",
+                "namespace": "monitoring",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "monitoring.coreos.com/v1",
+                        "kind": "Prometheus",
+                        "name": "prometheus-stack-kube-prom-prometheus",
+                        "uid": "8ecaecc2-2f50-4b59-9b02-88bbbf1d251c"
+                    }
+                ],
+                "resourceVersion": "1449",
+                "uid": "42e034db-f8c8-4f97-9a98-78601836230d"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-web",
+                        "port": 9090,
+                        "protocol": "TCP",
+                        "targetPort": "http-web"
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/name": "prometheus"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "grafana",
+                    "app.kubernetes.io/version": "8.3.3",
+                    "helm.sh/chart": "grafana-6.20.4"
+                },
+                "name": "prometheus-stack-grafana",
+                "namespace": "monitoring",
+                "resourceVersion": "1213",
+                "uid": "3564d470-1bf8-4cc4-8643-e59d54308bbd"
+            },
+            "spec": {
+                "clusterIP": "10.96.159.248",
+                "clusterIPs": [
+                    "10.96.159.248"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-web",
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 3000
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/name": "grafana"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app": "kube-prometheus-stack-alertmanager",
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/part-of": "kube-prometheus-stack",
+                    "app.kubernetes.io/version": "27.2.2",
+                    "chart": "kube-prometheus-stack-27.2.2",
+                    "heritage": "Helm",
+                    "release": "prometheus-stack",
+                    "self-monitor": "true"
+                },
+                "name": "prometheus-stack-kube-prom-alertmanager",
+                "namespace": "monitoring",
+                "resourceVersion": "1243",
+                "uid": "01f0aff8-704c-4513-ae06-20aa4196c2ce"
+            },
+            "spec": {
+                "clusterIP": "10.96.214.78",
+                "clusterIPs": [
+                    "10.96.214.78"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-web",
+                        "port": 9093,
+                        "protocol": "TCP",
+                        "targetPort": 9093
+                    }
+                ],
+                "selector": {
+                    "alertmanager": "prometheus-stack-kube-prom-alertmanager",
+                    "app.kubernetes.io/name": "alertmanager"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app": "kube-prometheus-stack-operator",
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/part-of": "kube-prometheus-stack",
+                    "app.kubernetes.io/version": "27.2.2",
+                    "chart": "kube-prometheus-stack-27.2.2",
+                    "heritage": "Helm",
+                    "release": "prometheus-stack"
+                },
+                "name": "prometheus-stack-kube-prom-operator",
+                "namespace": "monitoring",
+                "resourceVersion": "1235",
+                "uid": "5334590c-b11b-42f2-bcb2-3e01a57c091f"
+            },
+            "spec": {
+                "clusterIP": "10.96.9.28",
+                "clusterIPs": [
+                    "10.96.9.28"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "https",
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": "https"
+                    }
+                ],
+                "selector": {
+                    "app": "kube-prometheus-stack-operator",
+                    "release": "prometheus-stack"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app": "kube-prometheus-stack-prometheus",
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/part-of": "kube-prometheus-stack",
+                    "app.kubernetes.io/version": "27.2.2",
+                    "chart": "kube-prometheus-stack-27.2.2",
+                    "heritage": "Helm",
+                    "release": "prometheus-stack",
+                    "self-monitor": "true"
+                },
+                "name": "prometheus-stack-kube-prom-prometheus",
+                "namespace": "monitoring",
+                "resourceVersion": "1217",
+                "uid": "523dde72-e3bd-4ce6-91bb-c01741c3c98a"
+            },
+            "spec": {
+                "clusterIP": "10.96.234.40",
+                "clusterIPs": [
+                    "10.96.234.40"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-web",
+                        "port": 9090,
+                        "protocol": "TCP",
+                        "targetPort": 9090
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/name": "prometheus",
+                    "prometheus": "prometheus-stack-kube-prom-prometheus"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app.kubernetes.io/component": "metrics",
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "kube-state-metrics",
+                    "app.kubernetes.io/part-of": "kube-state-metrics",
+                    "app.kubernetes.io/version": "2.3.0",
+                    "helm.sh/chart": "kube-state-metrics-4.2.0"
+                },
+                "name": "prometheus-stack-kube-state-metrics",
+                "namespace": "monitoring",
+                "resourceVersion": "1239",
+                "uid": "eae69396-0fbd-4a60-8d26-328902970383"
+            },
+            "spec": {
+                "clusterIP": "10.96.104.218",
+                "clusterIPs": [
+                    "10.96.104.218"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 8080,
+                        "protocol": "TCP",
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/instance": "prometheus-stack",
+                    "app.kubernetes.io/name": "kube-state-metrics"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "prometheus-stack",
+                    "meta.helm.sh/release-namespace": "monitoring",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-06-12T09:54:36Z",
+                "labels": {
+                    "app": "prometheus-node-exporter",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "chart": "prometheus-node-exporter-2.4.1",
+                    "heritage": "Helm",
+                    "jobLabel": "node-exporter",
+                    "release": "prometheus-stack"
+                },
+                "name": "prometheus-stack-prometheus-node-exporter",
+                "namespace": "monitoring",
+                "resourceVersion": "1230",
+                "uid": "8e88b5b3-f10f-498d-a874-60dcd1093f05"
+            },
+            "spec": {
+                "clusterIP": "10.96.236.92",
+                "clusterIPs": [
+                    "10.96.236.92"
+                ],
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-metrics",
+                        "port": 9100,
+                        "protocol": "TCP",
+                        "targetPort": 9100
+                    }
+                ],
+                "selector": {
+                    "app": "prometheus-node-exporter",
+                    "release": "prometheus-stack"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}
