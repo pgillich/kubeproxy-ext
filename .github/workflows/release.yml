@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*" # Run workflow on version tags, e.g. v1.0.0.
 
+env:
+  USE_CACHE: "0"
+
 jobs:
   build:
     runs-on: ubuntu-latest
