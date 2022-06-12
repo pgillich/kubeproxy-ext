@@ -13,7 +13,6 @@ DOCKER_MDLINT_VERSION ?= 0.3.2
 DOCKER_MDLINT_IMAGE ?= markdownlint-cli2:${DOCKER_MDLINT_VERSION}
 DOCKER_MDLINT_PATH ?= davidanson
 
-API_PACKAGE_NAME ?= kubeproxy-ext
 APP_NAME ?= kubeproxy-ext
 
 DOCKER_APP_VERSION ?= $(shell git describe --tags | tail -n 1)
@@ -77,6 +76,11 @@ image:
 		--tag ${DOCKER_APP_PATH}/${DOCKER_APP_IMAGE} \
 		.
 .PHONY: image
+
+image-vars:
+	@echo "APP_NAME=${APP_NAME}"
+	@echo "DOCKER_APP_PATH=${DOCKER_APP_PATH}"
+	@echo "DOCKER_APP_IMAGE=${DOCKER_APP_IMAGE}"
 
 image-push:
 	docker image push \
