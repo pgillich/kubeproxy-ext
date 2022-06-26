@@ -110,7 +110,6 @@ func (s *Service) ModifyResponse(resp *http.Response) error {
 		}
 	} else {
 		newBody = xBody
-		s.log.Info("ModifyResponse", "newBody", newBody)
 	}
 
 	respBody := io.NopCloser(bytes.NewReader(newBody))
