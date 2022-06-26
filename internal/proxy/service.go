@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -79,7 +81,21 @@ func (s *Service) Serve() {
 var errBodyNotExtended = errors.New("body not extended")
 
 func (s *Service) ModifyResponse(resp *http.Response) error {
-	body, err := io.ReadAll(resp.Body)
+	var reader io.ReadCloser
+	var err error
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		if reader, err = gzip.NewReader(resp.Body); err != nil {
+			return fmt.Errorf("resp body gzip: %w", err)
+		}
+		defer reader.Close() // nolint:errcheck // not important
+	case "deflate":
+		reader = flate.NewReader(resp.Body)
+		defer reader.Close() // nolint:errcheck // not important
+	default:
+		reader = resp.Body
+	}
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -88,18 +104,20 @@ func (s *Service) ModifyResponse(resp *http.Response) error {
 	}
 
 	newBody := body
-	if body, err = s.extendBody(body); err != nil {
+	if xBody, err := s.extendBody(body); err != nil {
 		if !errors.Is(err, errBodyNotExtended) {
-			s.log.Error(err, "MarshalJSON PodList")
+			s.log.Error(err, "ModifyResponse")
 		}
 	} else {
-		newBody = body
+		newBody = xBody
+		s.log.Info("ModifyResponse", "newBody", newBody)
 	}
 
 	respBody := io.NopCloser(bytes.NewReader(newBody))
 	resp.Body = respBody
 	resp.ContentLength = int64(len(newBody))
 	resp.Header.Set("Content-Length", strconv.Itoa(len(newBody)))
+	resp.Header.Del("Content-Encoding")
 
 	return nil
 }
@@ -181,7 +199,7 @@ func (s *Service) modifyPod(item *unstructured.Unstructured) error {
 }
 
 func FormatKubectlColumn(col string) string {
-	return strings.ReplaceAll(strings.ToUpper(col), " ", "_")
+	return strings.ReplaceAll(strings.Title(col), " ", "")
 }
 
 type DebugTransport struct {

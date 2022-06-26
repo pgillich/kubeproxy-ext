@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -104,16 +106,50 @@ func (s *ServiceTestSuite) TestService_Proxy_Pod() {
 }
 
 func (s *ServiceTestSuite) TestService_ModifyResponse_Pod() {
+	s.testServiceModifyResponsePod("")
+}
+
+func (s *ServiceTestSuite) TestService_ModifyResponse_Pod_Gzip() {
+	s.testServiceModifyResponsePod("gzip")
+}
+
+func (s *ServiceTestSuite) TestService_ModifyResponse_Pod_Deflate() {
+	s.testServiceModifyResponsePod("deflate")
+}
+
+func (s *ServiceTestSuite) testServiceModifyResponsePod(contentEncoding string) {
 	tests := s.getPodTests()
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
 			body, err := os.ReadFile("../../test" + tc.bodyFile)
 			require.NoError(s.T(), err, "bodyFile")
+			headers := http.Header{}
+			switch contentEncoding {
+			case "gzip":
+				buf := bytes.Buffer{}
+				writer := gzip.NewWriter(&buf)
+				_, err := writer.Write(body)
+				s.NoError(err, "gzip Write")
+				err = writer.Close()
+				s.NoError(err, "gzip Close")
+				body = buf.Bytes()
+				headers.Set("Content-Encoding", contentEncoding)
+			case "deflate":
+				buf := bytes.Buffer{}
+				writer, err := flate.NewWriter(&buf, flate.DefaultCompression)
+				s.NoError(err, "flate Write")
+				_, err = writer.Write(body)
+				s.NoError(err, "flate Write")
+				err = writer.Close()
+				s.NoError(err, "flate Close")
+				body = buf.Bytes()
+				headers.Set("Content-Encoding", contentEncoding)
+			}
 			resp := &http.Response{
 				Proto:         "HTTP/1.0",
 				ProtoMajor:    1,
-				Header:        make(http.Header),
+				Header:        headers,
 				Close:         true,
 				Body:          io.NopCloser(bytes.NewReader(body)),
 				ContentLength: int64(len(body)),
@@ -153,10 +189,10 @@ func (s *ServiceTestSuite) checkPod(resp *http.Response, tc podTest) {
 	s.True(has, "ObjectKeyKubectl")
 	kubectlMap, is := kubectlValues.(map[string]interface{})
 	s.True(is, "ObjectKeyKubectl")
-	if tc.wantKubectl["AGE"] != "" {
-		s.NotEmpty(kubectlMap["AGE"], "AGE")
+	if tc.wantKubectl["Age"] != "" {
+		s.NotEmpty(kubectlMap["Age"], "Age")
 	}
-	tc.wantKubectl["AGE"] = kubectlMap["AGE"]
+	tc.wantKubectl["Age"] = kubectlMap["Age"]
 	s.EqualValues(tc.wantKubectl, kubectlMap, "kubectlColumns")
 }
 
@@ -167,16 +203,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Completed.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "137d",
-				"IP":              "10.92.92.119",
-				"NAME":            "secret-generator--1-jvbz8",
-				"NODE":            "hu2-vmp9",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Completed",
-				"CONDITIONS":      "Succeeded, The pod has completed successfully.",
+				"Age":            "137d",
+				"IP":             "10.92.92.119",
+				"Name":           "secret-generator--1-jvbz8",
+				"Node":           "hu2-vmp9",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "Completed",
+				"Conditions":     "Succeeded, The pod has completed successfully.",
 			},
 		},
 		{
@@ -184,16 +220,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/ContainerCreating.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "121d",
-				"IP":              "<none>",
-				"NAME":            "mysql-564d57cc47-qmlwp",
-				"NODE":            "hu2-vmp9",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "ContainerCreating",
-				"CONDITIONS":      "<none>",
+				"Age":            "121d",
+				"IP":             "<none>",
+				"Name":           "mysql-564d57cc47-qmlwp",
+				"Node":           "hu2-vmp9",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "ContainerCreating",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -201,16 +237,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/CrashLoopBackOff.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "130d",
-				"IP":              "10.92.92.14",
-				"NAME":            "longhorn-driver-deployer-69985cff47-zrr68",
-				"NODE":            "hu2-vmp9",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(3778),
-				"STATUS":          "CrashLoopBackOff",
-				"CONDITIONS":      "<none>",
+				"Age":            "130d",
+				"IP":             "10.92.92.14",
+				"Name":           "longhorn-driver-deployer-69985cff47-zrr68",
+				"Node":           "hu2-vmp9",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(3778),
+				"Status":         "CrashLoopBackOff",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -218,16 +254,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/ErrImagePull.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "113d",
-				"IP":              "10.92.118.250",
-				"NAME":            "tester",
-				"NODE":            "o-ci-01",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "ErrImagePull",
-				"CONDITIONS":      "<none>",
+				"Age":            "113d",
+				"IP":             "10.92.118.250",
+				"Name":           "tester",
+				"Node":           "o-ci-01",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "ErrImagePull",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -235,16 +271,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Error.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "248d",
-				"IP":              "10.90.2.3",
-				"NAME":            "nodelocaldns-krt85",
-				"NODE":            "hu2-vmp3",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(3),
-				"STATUS":          "Error",
-				"CONDITIONS":      "<none>",
+				"Age":            "248d",
+				"IP":             "10.90.2.3",
+				"Name":           "nodelocaldns-krt85",
+				"Node":           "hu2-vmp3",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(3),
+				"Status":         "Error",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -252,16 +288,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/ImageInspectError.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "114d",
-				"IP":              "10.92.81.12",
-				"NAME":            "ksniff-8ljgd",
-				"NODE":            "o-k8s-vps1",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "ImageInspectError",
-				"CONDITIONS":      "<none>",
+				"Age":            "114d",
+				"IP":             "10.92.81.12",
+				"Name":           "ksniff-8ljgd",
+				"Node":           "o-k8s-vps1",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "ImageInspectError",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -269,16 +305,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/ImagePullBackOff.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "113d",
-				"IP":              "10.92.118.250",
-				"NAME":            "tester",
-				"NODE":            "o-ci-01",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "ImagePullBackOff",
-				"CONDITIONS":      "<none>",
+				"Age":            "113d",
+				"IP":             "10.92.118.250",
+				"Name":           "tester",
+				"Node":           "o-ci-01",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "ImagePullBackOff",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -286,16 +322,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Init_CrashLoopBackOff.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "130d",
-				"IP":              "10.92.92.184",
-				"NAME":            "kratos-6c76994b97-gstzr",
-				"NODE":            "hu2-vmp9",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(5345),
-				"STATUS":          "Init:CrashLoopBackOff",
-				"CONDITIONS":      "<none>",
+				"Age":            "130d",
+				"IP":             "10.92.92.184",
+				"Name":           "kratos-6c76994b97-gstzr",
+				"Node":           "hu2-vmp9",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(5345),
+				"Status":         "Init:CrashLoopBackOff",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -303,16 +339,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Init_ImagePullBackOff.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "114d",
-				"IP":              "10.244.2.6",
-				"NAME":            "my-nginx-68cd7d56f4-8h2m5",
-				"NODE":            "demo-worker",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Init:ErrImagePull",
-				"CONDITIONS":      "<none>",
+				"Age":            "114d",
+				"IP":             "10.244.2.6",
+				"Name":           "my-nginx-68cd7d56f4-8h2m5",
+				"Node":           "demo-worker",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "Init:ErrImagePull",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -320,16 +356,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Init_Running.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "114d",
-				"IP":              "10.244.2.7",
-				"NAME":            "my-nginx-7764d469c9-7wsmh",
-				"NODE":            "demo-worker",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Init:0/1",
-				"CONDITIONS":      "<none>",
+				"Age":            "114d",
+				"IP":             "10.244.2.7",
+				"Name":           "my-nginx-7764d469c9-7wsmh",
+				"Node":           "demo-worker",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "Init:0/1",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -337,16 +373,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Init_Terminating.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "114d",
-				"IP":              "10.244.2.7",
-				"NAME":            "my-nginx-7764d469c9-7wsmh",
-				"NODE":            "demo-worker",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Terminating",
-				"CONDITIONS":      "<none>",
+				"Age":            "114d",
+				"IP":             "10.244.2.7",
+				"Name":           "my-nginx-7764d469c9-7wsmh",
+				"Node":           "demo-worker",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "Terminating",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -354,16 +390,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/PodInitializing.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "114d",
-				"IP":              "<none>",
-				"NAME":            "my-nginx-5997694d7b-vfvff",
-				"NODE":            "demo-worker",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "0/1",
-				"READY":           "0/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Init:0/1",
-				"CONDITIONS":      "<none>",
+				"Age":            "114d",
+				"IP":             "<none>",
+				"Name":           "my-nginx-5997694d7b-vfvff",
+				"Node":           "demo-worker",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "0/1",
+				"Ready":          "0/1",
+				"Restarts":       int64(0),
+				"Status":         "Init:0/1",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -371,16 +407,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Running2.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "239d",
-				"IP":              "10.90.2.9",
-				"NAME":            "node-exporter-s6tbv",
-				"NODE":            "hu2-vmp9",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "2/2",
-				"RESTARTS":        int64(6),
-				"STATUS":          "Running",
-				"CONDITIONS":      "<none>",
+				"Age":            "239d",
+				"IP":             "10.90.2.9",
+				"Name":           "node-exporter-s6tbv",
+				"Node":           "hu2-vmp9",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "2/2",
+				"Restarts":       int64(6),
+				"Status":         "Running",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -388,16 +424,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Running3.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "130d",
-				"IP":              "10.92.86.166",
-				"NAME":            "blackbox-exporter-6798fb5bb4-rb6qc",
-				"NODE":            "hu2-vmp6",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "3/3",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Running",
-				"CONDITIONS":      "<none>",
+				"Age":            "130d",
+				"IP":             "10.92.86.166",
+				"Name":           "blackbox-exporter-6798fb5bb4-rb6qc",
+				"Node":           "hu2-vmp6",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "3/3",
+				"Restarts":       int64(0),
+				"Status":         "Running",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -405,16 +441,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Running.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "215d",
-				"IP":              "10.92.86.76",
-				"NAME":            "coredns-8474476ff8-lfwcf",
-				"NODE":            "hu2-vmp6",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "1/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Running",
-				"CONDITIONS":      "<none>",
+				"Age":            "215d",
+				"IP":             "10.92.86.76",
+				"Name":           "coredns-8474476ff8-lfwcf",
+				"Node":           "hu2-vmp6",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "1/1",
+				"Restarts":       int64(0),
+				"Status":         "Running",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -422,16 +458,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Terminating2.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "215d",
-				"IP":              "10.92.124.5",
-				"NAME":            "percona-server-mongodb-operator-7d76d4844d-2wjwv",
-				"NODE":            "hu2-vmp3",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "2/2",
-				"RESTARTS":        int64(1),
-				"STATUS":          "Terminating",
-				"CONDITIONS":      "<none>",
+				"Age":            "215d",
+				"IP":             "10.92.124.5",
+				"Name":           "percona-server-mongodb-operator-7d76d4844d-2wjwv",
+				"Node":           "hu2-vmp3",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "2/2",
+				"Restarts":       int64(1),
+				"Status":         "Terminating",
+				"Conditions":     "<none>",
 			},
 		},
 		{
@@ -439,16 +475,16 @@ func (*ServiceTestSuite) getPodTests() []podTest {
 			bodyFile: "/pod-status/Terminating.json",
 			wantErr:  nil,
 			wantKubectl: map[string]interface{}{
-				"AGE":             "145d",
-				"IP":              "10.92.124.218",
-				"NAME":            "coredns-8474476ff8-m8xzl",
-				"NODE":            "hu2-vmp3",
-				"NOMINATED_NODE":  "<none>",
-				"READINESS_GATES": "<none>",
-				"READY":           "1/1",
-				"RESTARTS":        int64(0),
-				"STATUS":          "Terminating",
-				"CONDITIONS":      "<none>",
+				"Age":            "145d",
+				"IP":             "10.92.124.218",
+				"Name":           "coredns-8474476ff8-m8xzl",
+				"Node":           "hu2-vmp3",
+				"NominatedNode":  "<none>",
+				"ReadinessGates": "<none>",
+				"Ready":          "1/1",
+				"Restarts":       int64(0),
+				"Status":         "Terminating",
+				"Conditions":     "<none>",
 			},
 		},
 	}
@@ -501,7 +537,7 @@ func (s *ServiceTestSuite) checkPodList(resp *http.Response, tc podListTest) {
 		s.True(is, "ObjectKeyKubectl")
 		kubectlKeys := make([]string, 0, len(kubectlMap))
 		for k := range kubectlMap {
-			if k != "AGE" {
+			if k != "Age" {
 				kubectlKeys = append(kubectlKeys, k)
 			}
 		}
