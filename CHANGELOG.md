@@ -1,6 +1,13 @@
 # Changelog
 
 <!-- markdownlint-disable MD024 -->
+## 0.1.3
+
+### Features and enhancements
+
+* Support compression
+
+### Bug fixes
 
 ## 0.1.2
 
